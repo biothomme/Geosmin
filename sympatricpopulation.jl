@@ -7,7 +7,10 @@ export make_genome,
     recombinate,
     reproduce,
     HybridPopulation,
-    proportion_species1
+    proportion_species1,
+    crosspollination_sampling,
+    plot_population_histories
+
 
 using Distributions
 using Plots
@@ -542,7 +545,7 @@ function plot_population_histories(
         end
         println(string("step", i))
     end
-    mhp = mean_heatmap ? plot(mhp_array..., layout=size(mhp_array)) : nothing
+    mhp = mean_heatmap ? plot(mhp_array..., size = (1200, 800)) : nothing
     mhp = mean_heatmap ? savefig(mhp, string("figures/heatmap_n_e", Nₑ ,".svg")) : nothing 
     fixation_plot ? savefig(
         fp, string("figures/speciesextinction_n_e", Nₑ ,".svg")) : nothing
