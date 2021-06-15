@@ -204,7 +204,7 @@ function recombinate(d_g::DiploidGenome, p_recombination::Float64; shuffled_arra
     d_g_new = deepcopy(d_g)
     if shuffled_array == []
         genome_length = length(d_g_new)
-        shuffled_array = 1:genome_length
+	shuffled_array = shuffle(1:genome_length)
     end
     switch = rand(Bool)
     for i in shuffled_array
@@ -312,13 +312,13 @@ function die_and_spawn(
     new_population =  Array{DiploidGenome, 1}(undef, Nₑ)
     death_said = kill_the_hybrids(
         Nₑ, n_turnover, population, homoz_lethality, fitness_function)
-    chromosome_shuffle = shuffle(1:length(population.population[1]))
+    # chromosome_shuffle = shuffle(1:length(population.population[1]))
     for i in 1:Nₑ
         if i in death_said
             (parent1, parent2) = sample_function(population, measure_function,
                 p_crosspollination)
-            parent1 = recombinate(parent1, p_recombination, shuffled_array=chromosome_shuffle)
-            parent2 = recombinate(parent2, p_recombination, shuffled_array=chromosome_shuffle)
+	    parent1 = recombinate(parent1, p_recombination) # , shuffled_array=chromosome_shuffle)
+	    parent2 = recombinate(parent2, p_recombination) # , shuffled_array=chromosome_shuffle)
             offspringenome = reproduce(parent1, parent2, p_meioticdrive)
             new_population[i] = offspringenome
         else
@@ -520,7 +520,7 @@ function plot_population_histories(
     n_iterations::Int64=10, p_allele::Float64=0.5, p_recombination::Float64=0.5, 
     p_meioticdrive::Float64=0.5, homoz_lethality::Float64=0.1, 
     measure_function::Function=proportion_species1, fitness_function::Function=genome_balance,
-    sample_function::Function=random_parent_sampling)
+    sample_function::Function=random_parent_sampling, postfix::String="")
     HYBRID_OVERSHOOT = .1
     gr()
     vp = variance_plot ? plot() : nothing
@@ -533,26 +533,26 @@ function plot_population_histories(
             p_crosspollination=i, homoz_lethality=homoz_lethality, 
             measure_function=measure_function, fitness_function=fitness_function,
             sample_function=sample_function);
-        variance_plot ? bar!(vp, mapslices(sum, properties_history.hybrid_overshoot.>HYBRID_OVERSHOOT,
-            dims=1)', linewidth=0, label=string(i)) : nothing
-        hybridization_content_plot ? bar!(hcp, mapslices(x -> mean(x), properties_history.variances, dims=1)',
-            linewidth=.1) : nothing
-        fixation_plot ? bar!(fp, dropdims(mapslices(mean,
+	variance_plot ? plot!(vp, (1:n_cycles), mapslices(sum, properties_history.hybrid_overshoot.>HYBRID_OVERSHOOT,
+            dims=1)', linewidth=1, label=string(i)) : nothing
+	hybridization_content_plot ? plot!(hcp, (1:n_cycles), mapslices(x -> mean(x), properties_history.variances, dims=1)',
+            linewidth=.5, label=string(i)) : nothing
+        fixation_plot ? plot!(fp, (1:n_cycles), dropdims(mapslices(mean,
             mapslices(x -> minimum(x), properties_history.fixations, dims=(2)),
-                dims=1), dims=1)', linewidth=.2) : nothing
+                dims=1), dims=1)', linewidth=.5, label=string(i)) : nothing
         if mean_heatmap
-            mhp_array[j] = heatmap(population_history, title=string(i))
+            mhp_array[j] = heatmap(population_history, title=string(i), colorbar=:none)
         end
         println(string("step", i))
     end
-    mhp = mean_heatmap ? plot(mhp_array..., size = (1200, 800)) : nothing
-    mhp = mean_heatmap ? savefig(mhp, string("figures/heatmap_n_e", Nₑ ,".svg")) : nothing 
+    mhp = mean_heatmap ? plot(mhp_array..., size = (1200, 800), link = :y) : nothing
+    mhp = mean_heatmap ? savefig(mhp, string("figures/heatmap_n_e", Nₑ , postfix, ".svg")) : nothing 
     fixation_plot ? savefig(
-        fp, string("figures/speciesextinction_n_e", Nₑ ,".svg")) : nothing
+        fp, string("figures/speciesextinction_n_e", Nₑ , postfix, ".svg")) : nothing
     variance_plot ? savefig(
-        vp, string("figures/variance_n_e", Nₑ ,".svg")) : nothing
+        vp, string("figures/variance_n_e", Nₑ , postfix, ".svg")) : nothing
     hybridization_content_plot ? savefig(
-        hcp, string("figures/hybrid_fraction_n_e", Nₑ ,".svg")) : nothing
+        hcp, string("figures/hybrid_fraction_n_e", Nₑ , postfix, ".svg")) : nothing
 end
 # Main
 
