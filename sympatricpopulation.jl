@@ -377,8 +377,8 @@ Returns array of indices of individuals to kill.
 function kill_the_hybrids(
     Nₑ::Int64, n_turnover::Int64, population::HybridPopulation,
     homoz_lethality::Float64, measure_function::Function)
-    ε = .5 / (homoz_lethality^-1 - 1)
-    weights = [measure_function(individual) + ε 
+    ε = (1 - homoz_lethality) / .5
+    weights = [measure_function(individual) * ε + homoz_lethality
         for individual in population.population]
     StatsBase.sample(1:Nₑ, pweights(weights), n_turnover; replace=false)
 end
